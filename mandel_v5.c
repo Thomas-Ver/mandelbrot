@@ -5,7 +5,7 @@
 #include <string.h>
 
 
-/* je n'ai pas fait la partie 2.f  de l'étape 4*/
+
 
 
 #define STRMAX 256
@@ -54,24 +54,53 @@ void render_init(struct render *set, char *argv[]);
 /*void render_save_bw(struct render *set); on sen sert plus */
 void render_save_altern(struct render *set,  char *argv[]) ;
 void  cam2rect(struct render *set, struct camera *pov);
+char *my_strdup(const char *s);
 
 int main(int argc, char *argv[]) { /*argument de main x et y de centre puis la hauteur et longeur de l'image*/
 
     struct render set;
     struct camera pov;
-    char * endPtr;
 
-    pov.x = strtod(argv[2],&endPtr);
-    assert( argv[2] != endPtr ); /*verification pour pas de bug*/
-    argv[2] = endPtr;
-    argv[2][0] = ' ';  /* ici on remplace la virgule par un espace pour que strtod lise bien un floatant pour y*/
-    pov.y = strtod(argv[2],&endPtr);
-    argv[2] = endPtr;
-    argv[2][0] = ' '; 
-    pov.width = strtod(argv[2],&endPtr);
-    argv[2] = endPtr;
-    argv[2][0] = ' ';
-    pov.height = strtod(argv[2],&endPtr);
+
+    printf("argc = %d\n",argc);
+    printf("argv[1] = %s\n",argv[1]);
+    printf("argv[2] = %s\n",argv[2]);
+
+    if (argc < 3) {
+        fprintf(stderr, "Usage: %s <param1> <x,y,width,height>\n", argv[0]);
+        return EXIT_FAILURE;}
+
+
+    char *input = my_strdup(argv[2]); // Crée une copie locale modifiable de argv[2]
+    if (input == NULL) {
+        perror("Failed to allocate memory");
+        return EXIT_FAILURE;
+    }
+
+    char *endPtr;
+
+    // Remplace les virgules par des espaces pour permettre l'analyse par strtod
+    for (char *p = input; *p; ++p) {
+        if (*p == ',') *p = ' ';
+    }
+
+    // Extraire les valeurs x, y, width et height
+    pov.x = strtod(input, &endPtr);
+    assert(input != endPtr);  // Vérifie qu'un nombre a bien été extrait
+
+    pov.y = strtod(endPtr, &endPtr);
+    assert(endPtr != NULL);   // Vérifie que y a été extrait
+
+    pov.width = strtod(endPtr, &endPtr);
+    assert(endPtr != NULL);   // Vérifie que width a été extrait
+
+    pov.height = strtod(endPtr, &endPtr);
+    assert(endPtr != NULL);   // Vérifie que height a été extrait
+
+    free(input);  // Libère la mémoire allouée pour la copie locale
+
+    // Affiche les résultats pour vérifier
+    printf("x: %f, y: %f, width: %f, height: %f\n", pov.x, pov.y, pov.width, pov.height);
 
     render_init(&set,argv);
     cam2rect(&set,&pov);
@@ -187,4 +216,10 @@ void  cam2rect(struct render *set, struct camera *pov){
      
 }
 
-
+char *my_strdup(const char *s) {
+    char *copy = malloc(strlen(s) + 1); // Alloue suffisamment de mémoire
+    if (copy != NULL) {
+        strcpy(copy, s); // Copie la chaîne source
+    }
+    return copy;
+}
